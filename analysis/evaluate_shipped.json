@@ -1,0 +1,74 @@
+{
+  "MADDPG": {
+    "mean_reward": 3252.9019401968635,
+    "std_reward": 359.71441087188185,
+    "mean_length": 167.0,
+    "mean_emergency_speed": 2.5,
+    "mean_social_speed": 2.9894377487862225,
+    "min_emergency_speed": 0.0,
+    "mean_emergency_stall_steps": 0.47058823529411764,
+    "success_rate": 0.5882352941176471,
+    "emergency_episodes": 17,
+    "n_episodes": 20
+  },
+  "Always Open": {
+    "mean_reward": 3208.3474485163906,
+    "std_reward": 390.5329481894808,
+    "mean_length": 167.0,
+    "mean_emergency_speed": 2.3690476190476195,
+    "mean_social_speed": 2.9066250097786854,
+    "min_emergency_speed": 0.0,
+    "mean_emergency_stall_steps": 0.6428571428571429,
+    "success_rate": 0.5714285714285714,
+    "emergency_episodes": 14,
+    "n_episodes": 20
+  },
+  "Always Close": {
+    "mean_reward": 2801.4562466018356,
+    "std_reward": 208.3012463185349,
+    "mean_length": 167.0,
+    "mean_emergency_speed": 5.0,
+    "mean_social_speed": 1.857837215827105,
+    "min_emergency_speed": 5.0,
+    "mean_emergency_stall_steps": 0.0,
+    "success_rate": 1.0,
+    "emergency_episodes": 16,
+    "n_episodes": 20
+  },
+  "Random": {
+    "mean_reward": 3429.9886532834257,
+    "std_reward": 340.589597031856,
+    "mean_length": 167.0,
+    "mean_emergency_speed": 2.6,
+    "mean_social_speed": 2.820816460671376,
+    "min_emergency_speed": 0.0,
+    "mean_emergency_stall_steps": 0.2,
+    "success_rate": 0.5,
+    "emergency_episodes": 20,
+    "n_episodes": 20
+  },
+  "Periodic": {
+    "mean_reward": 3346.1129201418526,
+    "std_reward": 316.8610033011258,
+    "mean_length": 167.0,
+    "mean_emergency_speed": 2.4285714285714284,
+    "mean_social_speed": 2.9500283153661826,
+    "min_emergency_speed": 0.0,
+    "mean_emergency_stall_steps": 0.2857142857142857,
+    "success_rate": 0.5,
+    "emergency_episodes": 14,
+    "n_episodes": 20
+  },
+  "Greedy": {
+    "mean_reward": 2949.9201870794514,
+    "std_reward": 300.826595941866,
+    "mean_length": 167.0,
+    "mean_emergency_speed": 5.0,
+    "mean_social_speed": 1.8907354739408846,
+    "min_emergency_speed": 5.0,
+    "mean_emergency_stall_steps": 0.0,
+    "success_rate": 1.0,
+    "emergency_episodes": 16,
+    "n_episodes": 20
+  }
+}

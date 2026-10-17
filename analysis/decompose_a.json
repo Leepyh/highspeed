@@ -1,0 +1,40 @@
+{
+ "MADDPG_argmax": {
+  "per_agent_step": {
+   "emergency_speed": 0.5134371257484999,
+   "resource": 0.6361277445109781,
+   "efficiency": 17.87724854039553,
+   "speed_gain": 1.0467567381346086,
+   "control": -0.0038722554890218705
+  },
+  "share_pct": {
+   "emergency_speed": 2.558270326131248,
+   "resource": 3.1695930247326682,
+   "efficiency": 89.07582284217139,
+   "speed_gain": 5.215607846713119,
+   "control": -0.01929403974892137
+  },
+  "total_agent_steps": 25050,
+  "total_reward_sum": 502745.9322271824,
+  "mean_step_reward_per_agent": 20.069697893300695
+ },
+ "MADDPG_sample": {
+  "per_agent_step": {
+   "emergency_speed": 0.46060412508316373,
+   "resource": -0.006427145708582834,
+   "efficiency": 17.235221983774654,
+   "speed_gain": 0.9571213518968343,
+   "control": -0.05832335329339502
+  },
+  "share_pct": {
+   "emergency_speed": 2.4779386942741404,
+   "resource": -0.034576488089766634,
+   "efficiency": 92.72132213381386,
+   "speed_gain": 5.149081182355726,
+   "control": -0.31376552235486543
+  },
+  "total_agent_steps": 25050,
+  "total_reward_sum": 465634.33389190864,
+  "mean_step_reward_per_agent": 18.58819696175284
+ }
+}

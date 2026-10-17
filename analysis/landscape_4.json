@@ -1,0 +1,15 @@
+{
+ "600": {
+  "n_cars": 600,
+  "open_reward": 3348.948827616532,
+  "close_reward": 2681.810796364362,
+  "delta": 667.1380312521701,
+  "optimal": "OPEN",
+  "open_social": 2.533594893546241,
+  "close_social": 1.7501484530938125,
+  "open_em": 2.7928848185980977,
+  "close_em": 5.0,
+  "n_episodes": 24,
+  "seconds": 262.6
+ }
+}

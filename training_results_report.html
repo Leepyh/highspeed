@@ -1,0 +1,610 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MADDPG 训练结果报告</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            padding-left: 10px;
+            border-left: 4px solid #e74c3c;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        tr:hover {
+            background-color: #e3f2fd;
+            transition: background-color 0.3s;
+        }
+        .stats-card {
+            display: inline-block;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 20px 30px;
+            margin: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .stats-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .stats-card .value {
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .highlight {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+        }
+        .image-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .image-container img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 MADDPG 训练结果可视化报告</h1>
+        
+        <div style="text-align: center;">
+            <div class="stats-card">
+                <h3>总实验次数</h3>
+                <div class="value">33</div>
+            </div>
+            <div class="stats-card">
+                <h3>车辆数范围</h3>
+                <div class="value">100-200</div>
+            </div>
+            <div class="stats-card">
+                <h3>平均疏通步数</h3>
+                <div class="value">332.8</div>
+            </div>
+            <div class="stats-card">
+                <h3>最佳性能</h3>
+                <div class="value">56.4</div>
+            </div>
+        </div>
+
+        <h2>📊 原始数据表</h2>
+        <table border="1" class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>车辆数</th>
+      <th>应急车数</th>
+      <th>密度</th>
+      <th>平均疏通距离</th>
+      <th>平均疏通步数</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>100</td>
+      <td>1</td>
+      <td>0.50</td>
+      <td>2500.0</td>
+      <td>167.3</td>
+    </tr>
+    <tr>
+      <td>100</td>
+      <td>2</td>
+      <td>0.50</td>
+      <td>2500.0</td>
+      <td>250.5</td>
+    </tr>
+    <tr>
+      <td>100</td>
+      <td>3</td>
+      <td>0.50</td>
+      <td>2500.0</td>
+      <td>56.4</td>
+    </tr>
+    <tr>
+      <td>110</td>
+      <td>1</td>
+      <td>0.55</td>
+      <td>2500.0</td>
+      <td>167.3</td>
+    </tr>
+    <tr>
+      <td>110</td>
+      <td>2</td>
+      <td>0.55</td>
+      <td>2500.0</td>
+      <td>250.5</td>
+    </tr>
+    <tr>
+      <td>110</td>
+      <td>3</td>
+      <td>0.55</td>
+      <td>2500.0</td>
+      <td>167.3</td>
+    </tr>
+    <tr>
+      <td>120</td>
+      <td>1</td>
+      <td>0.60</td>
+      <td>2500.0</td>
+      <td>500.0</td>
+    </tr>
+    <tr>
+      <td>120</td>
+      <td>2</td>
+      <td>0.60</td>
+      <td>2500.0</td>
+      <td>416.8</td>
+    </tr>
+    <tr>
+      <td>120</td>
+      <td>3</td>
+      <td>0.60</td>
+      <td>2500.0</td>
+      <td>167.3</td>
+    </tr>
+    <tr>
+      <td>130</td>
+      <td>1</td>
+      <td>0.65</td>
+      <td>2500.0</td>
+      <td>500.0</td>
+    </tr>
+    <tr>
+      <td>130</td>
+      <td>2</td>
+      <td>0.65</td>
+      <td>2500.0</td>
+      <td>333.7</td>
+    </tr>
+    <tr>
+      <td>130</td>
+      <td>3</td>
+      <td>0.65</td>
+      <td>2500.0</td>
+      <td>222.8</td>
+    </tr>
+    <tr>
+      <td>140</td>
+      <td>1</td>
+      <td>0.70</td>
+      <td>2500.0</td>
+      <td>500.0</td>
+    </tr>
+    <tr>
+      <td>140</td>
+      <td>2</td>
+      <td>0.70</td>
+      <td>2500.0</td>
+      <td>500.0</td>
+    </tr>
+    <tr>
+      <td>140</td>
+      <td>3</td>
+      <td>0.70</td>
+      <td>2500.0</td>
+      <td>167.3</td>
+    </tr>
+    <tr>
+      <td>150</td>
+      <td>1</td>
+      <td>0.75</td>
+      <td>2500.0</td>
+      <td>500.0</td>
+    </tr>
+    <tr>
+      <td>150</td>
+      <td>2</td>
+      <td>0.75</td>
+      <td>2500.0</td>
+      <td>333.7</td>
+    </tr>
+    <tr>
+      <td>150</td>
+      <td>3</td>
+      <td>0.75</td>
+      <td>2500.0</td>
+      <td>167.3</td>
+    </tr>
+    <tr>
+      <td>160</td>
+      <td>1</td>
+      <td>0.80</td>
+      <td>2500.0</td>
+      <td>500.0</td>
+    </tr>
+    <tr>
+      <td>160</td>
+      <td>2</td>
+      <td>0.80</td>
+      <td>2500.0</td>
+      <td>416.8</td>
+    </tr>
+    <tr>
+      <td>160</td>
+      <td>3</td>
+      <td>0.80</td>
+      <td>2500.0</td>
+      <td>167.3</td>
+    </tr>
+    <tr>
+      <td>170</td>
+      <td>1</td>
+      <td>0.85</td>
+      <td>2500.0</td>
+      <td>500.0</td>
+    </tr>
+    <tr>
+      <td>170</td>
+      <td>2</td>
+      <td>0.85</td>
+      <td>2500.0</td>
+      <td>416.8</td>
+    </tr>
+    <tr>
+      <td>170</td>
+      <td>3</td>
+      <td>0.85</td>
+      <td>2500.0</td>
+      <td>278.2</td>
+    </tr>
+    <tr>
+      <td>180</td>
+      <td>1</td>
+      <td>0.90</td>
+      <td>2500.0</td>
+      <td>500.0</td>
+    </tr>
+    <tr>
+      <td>180</td>
+      <td>2</td>
+      <td>0.90</td>
+      <td>2500.0</td>
+      <td>500.0</td>
+    </tr>
+    <tr>
+      <td>180</td>
+      <td>3</td>
+      <td>0.90</td>
+      <td>2500.0</td>
+      <td>222.8</td>
+    </tr>
+    <tr>
+      <td>190</td>
+      <td>1</td>
+      <td>0.95</td>
+      <td>2500.0</td>
+      <td>500.0</td>
+    </tr>
+    <tr>
+      <td>190</td>
+      <td>2</td>
+      <td>0.95</td>
+      <td>2500.0</td>
+      <td>333.7</td>
+    </tr>
+    <tr>
+      <td>190</td>
+      <td>3</td>
+      <td>0.95</td>
+      <td>2500.0</td>
+      <td>222.8</td>
+    </tr>
+    <tr>
+      <td>200</td>
+      <td>1</td>
+      <td>1.00</td>
+      <td>2500.0</td>
+      <td>500.0</td>
+    </tr>
+    <tr>
+      <td>200</td>
+      <td>2</td>
+      <td>1.00</td>
+      <td>2500.0</td>
+      <td>333.7</td>
+    </tr>
+    <tr>
+      <td>200</td>
+      <td>3</td>
+      <td>1.00</td>
+      <td>2500.0</td>
+      <td>222.8</td>
+    </tr>
+  </tbody>
+</table>
+        
+        <h2>📈 平均疏通步数透视表</h2>
+        <div class="highlight">
+            <strong>说明：</strong>行表示社会车辆数，列表示应急车数，数值越小表示疏通效率越高
+        </div>
+        <table border="1" class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>应急车数</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+    </tr>
+    <tr>
+      <th>车辆数</th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>100</th>
+      <td>167.3</td>
+      <td>250.5</td>
+      <td>56.4</td>
+    </tr>
+    <tr>
+      <th>110</th>
+      <td>167.3</td>
+      <td>250.5</td>
+      <td>167.3</td>
+    </tr>
+    <tr>
+      <th>120</th>
+      <td>500.0</td>
+      <td>416.8</td>
+      <td>167.3</td>
+    </tr>
+    <tr>
+      <th>130</th>
+      <td>500.0</td>
+      <td>333.7</td>
+      <td>222.8</td>
+    </tr>
+    <tr>
+      <th>140</th>
+      <td>500.0</td>
+      <td>500.0</td>
+      <td>167.3</td>
+    </tr>
+    <tr>
+      <th>150</th>
+      <td>500.0</td>
+      <td>333.7</td>
+      <td>167.3</td>
+    </tr>
+    <tr>
+      <th>160</th>
+      <td>500.0</td>
+      <td>416.8</td>
+      <td>167.3</td>
+    </tr>
+    <tr>
+      <th>170</th>
+      <td>500.0</td>
+      <td>416.8</td>
+      <td>278.2</td>
+    </tr>
+    <tr>
+      <th>180</th>
+      <td>500.0</td>
+      <td>500.0</td>
+      <td>222.8</td>
+    </tr>
+    <tr>
+      <th>190</th>
+      <td>500.0</td>
+      <td>333.7</td>
+      <td>222.8</td>
+    </tr>
+    <tr>
+      <th>200</th>
+      <td>500.0</td>
+      <td>333.7</td>
+      <td>222.8</td>
+    </tr>
+  </tbody>
+</table>
+        
+        <h2>📉 统计分析</h2>
+        <h3>按应急车数分组</h3>
+        <table border="1" class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>平均值</th>
+      <th>标准差</th>
+      <th>最小值</th>
+      <th>最大值</th>
+    </tr>
+    <tr>
+      <th>应急车数</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>439.509091</td>
+      <td>134.583777</td>
+      <td>167.3</td>
+      <td>500.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>371.472727</td>
+      <td>86.126722</td>
+      <td>250.5</td>
+      <td>500.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>187.481818</td>
+      <td>56.954593</td>
+      <td>56.4</td>
+      <td>278.2</td>
+    </tr>
+  </tbody>
+</table>
+        
+        <h3>按车辆数分组</h3>
+        <table border="1" class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>平均值</th>
+      <th>标准差</th>
+      <th>最小值</th>
+      <th>最大值</th>
+    </tr>
+    <tr>
+      <th>车辆数</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>100</th>
+      <td>158.066667</td>
+      <td>97.378865</td>
+      <td>56.4</td>
+      <td>250.5</td>
+    </tr>
+    <tr>
+      <th>110</th>
+      <td>195.033333</td>
+      <td>48.035542</td>
+      <td>167.3</td>
+      <td>250.5</td>
+    </tr>
+    <tr>
+      <th>120</th>
+      <td>361.366667</td>
+      <td>173.138567</td>
+      <td>167.3</td>
+      <td>500.0</td>
+    </tr>
+    <tr>
+      <th>130</th>
+      <td>352.166667</td>
+      <td>139.519616</td>
+      <td>222.8</td>
+      <td>500.0</td>
+    </tr>
+    <tr>
+      <th>140</th>
+      <td>389.100000</td>
+      <td>192.084435</td>
+      <td>167.3</td>
+      <td>500.0</td>
+    </tr>
+    <tr>
+      <th>150</th>
+      <td>333.666667</td>
+      <td>166.350003</td>
+      <td>167.3</td>
+      <td>500.0</td>
+    </tr>
+    <tr>
+      <th>160</th>
+      <td>361.366667</td>
+      <td>173.138567</td>
+      <td>167.3</td>
+      <td>500.0</td>
+    </tr>
+    <tr>
+      <th>170</th>
+      <td>398.333333</td>
+      <td>112.047192</td>
+      <td>278.2</td>
+      <td>500.0</td>
+    </tr>
+    <tr>
+      <th>180</th>
+      <td>407.600000</td>
+      <td>160.041495</td>
+      <td>222.8</td>
+      <td>500.0</td>
+    </tr>
+    <tr>
+      <th>190</th>
+      <td>352.166667</td>
+      <td>139.519616</td>
+      <td>222.8</td>
+      <td>500.0</td>
+    </tr>
+    <tr>
+      <th>200</th>
+      <td>352.166667</td>
+      <td>139.519616</td>
+      <td>222.8</td>
+      <td>500.0</td>
+    </tr>
+  </tbody>
+</table>
+        
+        <h2>📊 可视化图表</h2>
+        <div class="image-container">
+            <img src="training_results_visualization.png" alt="训练结果可视化">
+        </div>
+        
+        <div class="highlight">
+            <strong>关键发现：</strong>
+            <ul>
+                <li>3辆应急车的配置在大多数情况下表现最佳，平均疏通步数最低</li>
+                <li>随着社会车辆数增加，疏通难度增大，步数相应增加</li>
+                <li>应急车数量从1辆增加到3辆，效率提升明显</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

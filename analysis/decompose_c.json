@@ -1,0 +1,40 @@
+{
+ "Random": {
+  "per_agent_step": {
+   "emergency_speed": 0.3663020625415812,
+   "resource": -0.00023952095808383233,
+   "efficiency": 18.320929587636453,
+   "speed_gain": 0.8903278858035958,
+   "control": -0.05062674650697278
+  },
+  "share_pct": {
+   "emergency_speed": 1.875904217393428,
+   "resource": -0.001226633484687438,
+   "efficiency": 93.825049309172,
+   "speed_gain": 4.559542537799247,
+   "control": -0.2592694308800337
+  },
+  "total_agent_steps": 25050,
+  "total_reward_sum": 489143.6663763404,
+  "mean_step_reward_per_agent": 19.52669326851658
+ },
+ "Periodic": {
+  "per_agent_step": {
+   "emergency_speed": 0.37791616766466635,
+   "resource": 0.024311377245508983,
+   "efficiency": 18.579823954922496,
+   "speed_gain": 0.9752392348155869,
+   "control": 0.0
+  },
+  "share_pct": {
+   "emergency_speed": 1.8936246041079956,
+   "resource": 0.12181702200339951,
+   "efficiency": 93.09792697796203,
+   "speed_gain": 4.886631395926153,
+   "control": 0.0
+  },
+  "total_agent_steps": 25050,
+  "total_reward_sum": 499930.13290294097,
+  "mean_step_reward_per_agent": 19.957290734648343
+ }
+}

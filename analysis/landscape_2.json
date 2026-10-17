@@ -1,0 +1,15 @@
+{
+ "520": {
+  "n_cars": 520,
+  "open_reward": 3602.7531499635993,
+  "close_reward": 2963.3484280693415,
+  "delta": 639.4047218942578,
+  "optimal": "OPEN",
+  "open_social": 2.9058599147858133,
+  "close_social": 2.031610816827883,
+  "open_em": 3.2345896442409297,
+  "close_em": 5.0,
+  "n_episodes": 24,
+  "seconds": 245.3
+ }
+}

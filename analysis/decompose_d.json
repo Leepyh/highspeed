@@ -1,0 +1,40 @@
+{
+ "Greedy": {
+  "per_agent_step": {
+   "emergency_speed": 0.56,
+   "resource": 0.5881437125748503,
+   "efficiency": 15.486189587033389,
+   "speed_gain": 0.8751532016540573,
+   "control": -0.03999999999999391
+  },
+  "share_pct": {
+   "emergency_speed": 3.2055893569598317,
+   "resource": 3.366691473915683,
+   "efficiency": 88.64707950010072,
+   "speed_gain": 5.009610337377799,
+   "control": -0.22897066835423885
+  },
+  "total_agent_steps": 25050,
+  "total_reward_sum": 437610.6368566216,
+  "mean_step_reward_per_agent": 17.469486501262338
+ },
+ "OracleDensity": {
+  "per_agent_step": {
+   "emergency_speed": 0.4284231536926104,
+   "resource": -0.15285429141716567,
+   "efficiency": 18.64947244674809,
+   "speed_gain": 0.8199097187559431,
+   "control": 0.0
+  },
+  "share_pct": {
+   "emergency_speed": 2.169785851025198,
+   "resource": -0.7741436846417786,
+   "efficiency": 94.4518546564638,
+   "speed_gain": 4.152503177153519,
+   "control": 0.0
+  },
+  "total_agent_steps": 25050,
+  "total_reward_sum": 494611.0232458723,
+  "mean_step_reward_per_agent": 19.744951027779333
+ }
+}
