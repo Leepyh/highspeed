@@ -9,15 +9,16 @@
 常量，与 evaluate.py 的真实输出（evaluation_results.json）不一致，
 连排序都不同。
 
-本脚本**只读取** evaluation_results.json 出图，杜绝硬编码：
+本脚本**只读取**指定评估 JSON 出图，默认使用修复后的
+evaluation_results_fixed.json，杜绝硬编码：
   - 数据缺失的指标明确标注"数据缺失"，不做任何补造；
   - 若 JSON 中缺少 MADDPG 行（未训练/未加载模型），如实反映。
 
 运行
 ----
     python plot_strategy_comparison.py
-    python plot_strategy_comparison.py --input evaluation_results.json \\
-        --output strategy_comparison_real.png
+    python plot_strategy_comparison.py --input evaluation_results_fixed.json \\
+        --output strategy_comparison_fixed.png
 """
 
 from __future__ import annotations
@@ -137,8 +138,8 @@ def draw_panel(ax, names, values, field, title, ylabel, fmt, higher_better,
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="基于真实评估数据绘制策略对比图")
-    parser.add_argument('--input', default=os.path.join(BASE_DIR, 'evaluation_results.json'))
-    parser.add_argument('--output', default=os.path.join(BASE_DIR, 'strategy_comparison_real.png'))
+    parser.add_argument('--input', default=os.path.join(BASE_DIR, 'evaluation_results_fixed.json'))
+    parser.add_argument('--output', default=os.path.join(BASE_DIR, 'strategy_comparison_fixed.png'))
     args = parser.parse_args()
 
     doc = load_results(args.input)

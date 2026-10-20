@@ -3,12 +3,12 @@
 MADDPG 完整训练启动脚本（2026-10-01 修复版）
 
 用法:
-    python run_training.py                          # 按配置训练（写到 ./models_v2）
+    python run_training.py                          # 按配置训练（写到 ./models_fixed_single）
     python run_training.py --episodes 200 --no-resume   # 小规模验证
     python run_training.py --episodes 1500 --seed 42 --tag v3a
 
 输出位置（重要）:
-    默认写 ./models_v2 与 ./logs_v2，**不会**覆盖 models_matd3 里已有的
+    默认写 ./models_fixed_single 与 ./logs_fixed_single，**不会**覆盖旧目录里已有的
     maddpg_best.pth（那是当前已验证的最优模型）。
     如需写回旧目录，必须显式指定：
         --model-dir ./models_matd3 --log-dir ./logs_matd3
@@ -23,7 +23,7 @@ MADDPG 完整训练启动脚本（2026-10-01 修复版）
     4. ε 改为线性衰减，探索时长可控
     5. best 模型按**滑动平均**挑选（原来按单回合最高分，噪声极大）
     6. 训练日志新增 ArgmaxOpen / Entropy / EntCoef，退化当场可见
-    7. 输出目录默认改为 models_v2 / logs_v2，旧模型零风险
+    7. 输出目录与修复前的模型隔离
 """
 
 import argparse
@@ -47,9 +47,9 @@ def main() -> int:
     parser.add_argument('--resume-from', default=None,
                         help='指定要恢复的检查点路径')
     parser.add_argument('--model-dir', default=None,
-                        help='模型输出目录（默认 ./models_v2）')
+                        help='模型输出目录（默认 ./models_fixed_single）')
     parser.add_argument('--log-dir', default=None,
-                        help='日志输出目录（默认 ./logs_v2）')
+                        help='日志输出目录（默认 ./logs_fixed_single）')
     parser.add_argument('--tag', default=None,
                         help='文件名前缀，便于同一目录内放多组实验')
     parser.add_argument('--entropy-coef', type=float, default=None,
@@ -90,7 +90,7 @@ def main() -> int:
     print("  4. 探索     : ε 线性衰减，探索时长可控")
     print("  5. best 挑选: 滑动平均窗口（原为单回合最高分，噪声极大）")
     print("  6. 日志     : 新增 ArgmaxOpen / Entropy / EntCoef 退化监控")
-    print("  7. 输出目录 : models_v2 / logs_v2，旧模型零风险")
+    print("  7. 输出目录 : models_fixed_single / logs_fixed_single")
     print("  8. 双 critic: twin critic + min(Q1,Q2)，抑制 Q 过估计")
     print("-" * 74)
     print(f"目标轮数  : {n_episodes}")

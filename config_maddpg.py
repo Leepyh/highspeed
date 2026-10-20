@@ -306,7 +306,7 @@ TRAIN_CONFIG = {
     # 文件较大（每 1 万条转移约 30MB，缓冲上限 50 万条约 1.5GB），
     # 故不宜过于频繁；若磁盘紧张可调大该值。
     'resume_freq': 50,
-    'resume_file': './models_v2/maddpg_resume.pth',
+    'resume_file': './models_fixed_single/maddpg_resume.pth',
 
     # 早停参数
     'early_stop_patience': 500,   # 早停耐心值
@@ -321,13 +321,14 @@ TRAIN_CONFIG = {
     # 日志与模型目录
     #
     # 【重要】2026-10-01 起默认输出目录从 models_matd3 / logs_matd3 改为
-    # models_v2 / logs_v2，原因是：从零开始的训练只要在某一轮超过
+    # 修复后的模型使用独立目录，避免自动续训或覆盖修复前的检查点。
+    # 历史上曾使用 models_v2 / logs_v2，原因是：从零开始的训练只要在某一轮超过
     # 3851.00 就会覆盖 models_matd3/maddpg_best.pth（现有最优模型）。
     # 换目录可以保证旧模型、旧日志一根毫毛都不动。
     # 如需写回旧目录，用命令行显式指定：--model-dir ./models_matd3 --log-dir ./logs_matd3
-    'log_dir': './logs_v2',      # 日志保存目录
-    'log_file': './logs_v2/training_output.log',  # 训练日志文件（供 visualize_training.py 解析）
-    'model_dir': './models_v2',  # 模型保存目录
+    'log_dir': './logs_fixed_single',      # 日志保存目录
+    'log_file': './logs_fixed_single/training_output.log',
+    'model_dir': './models_fixed_single',  # 模型保存目录
 }
 
 # ==================== 评估参数 ====================

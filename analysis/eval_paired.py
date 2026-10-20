@@ -246,7 +246,7 @@ def rollout(env, policy, seeds, verbose=False):
 
             openr.append(float(np.mean(actions == 1)))
             soc.append(float(np.mean(ca.vel[:n])) if n else 0.0)
-            lane2.append(float(np.sum(ca.lane[:ca.total_vehicles] == 2)) / max(n, 1))
+            lane2.append(float(np.sum(ca.lane[:n] == 2)) / max(n, 1))
             if ca.n_emergency > 0:
                 speeds = ca.vel[ca.emergency_ids]
                 em.append(float(np.mean(speeds)))

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
-MADDPG 训练结果可视化表格
-展示仿真结果数据的交互式表格和统计图表
+历史 CA 疏通数据可视化表格。
+PHOTO/仿真结果数据.txt 不属于当前 MADDPG 训练与评估结果。
 """
 
 import pandas as pd
@@ -89,7 +89,7 @@ pivot_distance = df.pivot_table(
 
 # 打印表格到控制台
 print("=" * 80)
-print("MADDPG 训练结果 - 仿真数据汇总")
+print("历史 CA 疏通数据汇总（非当前 MADDPG 训练结果）")
 print("=" * 80)
 print("\n【原始数据表】")
 print(df.to_string(index=False))
@@ -207,7 +207,7 @@ html_content = f"""
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>MADDPG 训练结果报告</title>
+    <title>历史 CA 疏通数据报告</title>
     <style>
         body {{
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -297,7 +297,8 @@ html_content = f"""
 </head>
 <body>
     <div class="container">
-        <h1>🚗 MADDPG 训练结果可视化报告</h1>
+        <h1>🚗 历史 CA 疏通数据报告</h1>
+        <p>该数据来自 PHOTO/仿真结果数据.txt，不属于当前 MADDPG 训练与评估结果。</p>
         
         <div style="text-align: center;">
             <div class="stats-card">

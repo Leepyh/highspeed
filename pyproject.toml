@@ -13,18 +13,4 @@ dependencies = [
     "seaborn>=0.13",
 ]
 
-# 说明：
-#   torch 必须从 PyTorch 官方 CUDA 12.8 索引安装，才能支持 RTX 50 系
-#   (Blackwell, sm_120) 显卡；PyPI 上的默认 torch 轮子是 CPU 版。
-#
-#   手动安装命令：
-#     pip install torch --index-url https://download.pytorch.org/whl/cu128
-#   或直接运行随项目提供的 setup_env.ps1。
-#
-[[tool.uv.index]]
-name = "pytorch-cu128"
-url = "https://download.pytorch.org/whl/cu128"
-explicit = true
-
-[tool.uv.sources]
-torch = { index = "pytorch-cu128" }
+# CPU is the default. setup_env.ps1 -Cuda128 opts into the CUDA 12.8 build.

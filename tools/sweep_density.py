@@ -10,8 +10,9 @@ severe_congestion_threshold=2.0（折算为 v_max 的 60%、40%）。
 原配置 n_cars_range=(200,350) 实测密度仅 0.10~0.175，
 社会车辆均速 4.96~5.00，**远高于阈值**，"拥堵"场景从不出现。
 
-本脚本在不同 n_cars 下测量稳态平均速度，找出穿越两个阈值的区间，
-据此给出 n_cars_range 的推荐取值。
+本脚本在应急车道关闭的条件下测量不同 n_cars 的稳态平均速度，
+找出穿越两个阈值的区间。开放/关闭的奖励对比由
+check_policy_state_dependence.py 单独检验。
 
 运行
 ----
@@ -54,6 +55,9 @@ def measure(n_cars: int, seeds=(1, 2, 3), steps: int = 300) -> float:
             v_init_min=CA_CONFIG["v_initial_range"][0],
             v_init_max=CA_CONFIG["v_initial_range"][1],
         )
+        # 训练环境预热阶段全部关闭；单独运行 CA 默认允许社会车进入应急车道，
+        # 不关闭闸门会测成三车道自由流，低估训练场景的拥堵程度。
+        ca._can_enter_emergency_lane = lambda vid: False
         for _ in range(CA_CONFIG["warm_up_steps"]):
             ca.step()
         run = []
@@ -77,7 +81,7 @@ def main() -> int:
     print(f"阈值: 轻度拥堵 < {ENV_CONFIG['congestion_threshold']} "
           f"(归一化 {light:.2f})，严重拥堵 < "
           f"{ENV_CONFIG['severe_congestion_threshold']} (归一化 {severe:.2f})")
-    print(f"说明: 密度按社会车辆可用的 {lanes_used} 条车道计算。\n")
+    print(f"说明: 应急车道全关闭，密度按 {lanes_used} 条社会车道计算。\n")
 
     print(f"{'n_cars':>8}{'密度':>9}{'均速':>9}{'归一化':>9}   状态")
     print("-" * 62)
@@ -114,27 +118,28 @@ def main() -> int:
     print(f"  首次低于轻度拥堵阈值({light:.2f}) 的 n_cars ≈ {n_light}")
     print(f"  首次低于严重拥堵阈值({severe:.2f}) 的 n_cars ≈ {n_severe}")
 
-    # 推荐区间：下界取轻度阈值附近，上界取严重阈值附近，保证两种拥堵都会出现
+    # 该区间仅描述全关闭基线的拥堵阈值，不直接替代现有训练配置。
     if n_light and n_severe:
         rec_lo = n_light
         rec_hi = n_severe + 50
         if rec_hi + CA_CONFIG["max_emergency"] > CA_CONFIG["L"]:
             rec_hi = CA_CONFIG["L"] - CA_CONFIG["max_emergency"]
-        print(f"\n  推荐 n_cars_range = ({rec_lo}, {rec_hi})")
+        print(f"\n  全关闭基线的阈值区间 = ({rec_lo}, {rec_hi})")
         lo_v = results.get(rec_lo - rec_lo % 50, float("nan"))
-        print(f"    该区间覆盖 轻度拥堵 ~ 严重拥堵，两种阈值状态都会在训练中出现。")
+        print(f"    该区间覆盖轻度拥堵到严重拥堵；训练配置还需结合开/关奖励对比。")
     else:
         print("\n  [警告] 未找到阈值穿越点，请检查阈值设置或道路长度。")
 
     banner("结论")
     if n_light:
-        print(f"  原配置 (200, 350) 的均速在 {results.get(200, float('nan')):.3f} ~ "
+        print(f"  历史配置 (200, 350) 的均速在 {results.get(200, float('nan')):.3f} ~ "
               f"{results.get(350, float('nan')):.3f}，归一化 "
               f"{results.get(200, float('nan')) / v_max:.3f} ~ "
               f"{results.get(350, float('nan')) / v_max:.3f}，")
         print(f"  全部高于轻度拥堵阈值 {light:.2f} —— 这解释了为什么训练中"
               f"「拥堵时开放应急车道」的场景从不触发。")
-        print(f"  修法：把 n_cars_range 提高到推荐区间。")
+        print(f"  当前配置 {CA_CONFIG['n_cars_range']} 的开/关奖励关系另由"
+              f" check_policy_state_dependence.py 检验。")
         return 0
     return 1
 

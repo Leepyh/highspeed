@@ -1,5 +1,13 @@
 # 高速公路应急车道元胞自动机仿真模型
 
+> **2026-10-20 修复后须重新训练和评估。** 本次修复了分段闸门全部落到第 0 段、
+> 车辆在仅空一格时越过前车、动作切换惩罚未生效的问题。仓库内现有的
+> `evaluation_results.json`、`analysis/*.json`、旧图表及下文历史分数均由修复前
+> 的模型产生，不能视为当前代码的训练结果。现有 `.venv` 是 Python 3.13 +
+> PyTorch 2.7.1 CPU 环境，可用 `.venv\Scripts\python.exe run_training.py`
+> 开始新训练。`main.py` 现运行当前环境的短场景演示；旧批量绘图驱动保存在
+> `analysis/legacy_main.py`，其 PHOTO 数据不属于当前训练环境。
+
 ## 模型概述
 
 本模型基于元胞自动机（Cellular Automaton, CA）理论，模拟高速公路上应急车辆对社会车辆交通流的影响。模型考虑了三车道场景（超车道、行车道、应急车道），并实现了应急车道的动态开放机制。
@@ -401,16 +409,16 @@ v(t+1) = min(v(t+1), d(t), v_front)
 
 ### 7.1 首次配置环境
 
-项目自带一键配置脚本（创建 `.venv`、装 torch CUDA 12.8 与全部依赖并校验）：
+项目自带配置脚本（创建或复用 `.venv`，默认安装 CPU 版 PyTorch 与全部依赖并校验）：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File setup_env.ps1
 ```
 
-若没有 NVIDIA 显卡，用 CPU 版以减少下载体积：
+若设备支持 CUDA 12.8 且希望使用 GPU，可显式选择：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File setup_env.ps1 -CpuOnly
+powershell -ExecutionPolicy Bypass -File setup_env.ps1 -Cuda128
 ```
 
 手动安装等价于：
@@ -418,12 +426,11 @@ powershell -ExecutionPolicy Bypass -File setup_env.ps1 -CpuOnly
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install torch --index-url https://download.pytorch.org/whl/cu128
+pip install torch==2.7.1
 pip install numpy matplotlib gymnasium pandas seaborn
 ```
 
-> **RTX 50 系用户注意**：Blackwell 架构（sm_120）必须使用 CUDA 12.8
-> 及以上的 torch 轮子，PyPI 默认的 torch 是 CPU 版。
+> GPU 安装需使用与设备和驱动兼容的 PyTorch 轮子；默认 CPU 环境也可训练。
 
 ### 7.2 训练
 
@@ -437,17 +444,17 @@ python run_training.py --episodes 20 --seed 42
 python run_training.py --seed 42
 ```
 
-训练日志同时写入 `logs_matd3/training_output.log`，可在另一个终端查看：
+训练日志同时写入 `logs_fixed_single/training_output.log`，可在另一个终端查看：
 
 ```powershell
-Get-Content .\logs_matd3\training_output.log -Wait
+Get-Content .\logs_fixed_single\training_output.log -Wait
 ```
 
 ### 7.3 评估与出图
 
 ```powershell
-python evaluate.py 50                                          # 公平评估
-python plot_strategy_comparison.py --input evaluation_results.json   # 真实数据出图
+python evaluate.py 160 .\models_fixed_single\maddpg_best_avg.pth --output evaluation_results_fixed.json
+python plot_strategy_comparison.py --input evaluation_results_fixed.json
 python visualize_training.py                                   # 训练曲线
 python training_results_table.py                               # 数据表格与 HTML 报告
 python high.py                                                 # CA 示例

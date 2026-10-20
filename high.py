@@ -395,9 +395,8 @@ class EmergencyVehicleCA:
             # 必须刹车
             self.vel[vid] = 0
         elif new_gap == 1:
-            # g=1时可能加速（根据模型假设）
-            if self.vel[vid] < self.v_max:
-                self.vel[vid] += 1
+            # 前方仅空一格时速度不能超过空隙，否则会越过或覆盖前车。
+            self.vel[vid] = min(self.vel[vid] + 1, self.v_max, new_gap)
         else:
             # 正常加速
             if self.vel[vid] < self.v_max:

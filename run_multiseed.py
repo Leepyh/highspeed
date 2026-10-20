@@ -15,11 +15,11 @@
     python run_multiseed.py --n-seeds 5 --episodes 500 --dry-run
 
     # 5 个种子，并行 3 个进程
-    python run_multiseed.py --n-seeds 5 --episodes 500 --parallel 3 --root ./models_v5 --log-root ./logs_v5
+    python run_multiseed.py --n-seeds 5 --episodes 500 --parallel 3
 
-    # 关掉 twin critic 做 A/B
-    python run_multiseed.py --n-seeds 5 --episodes 500 --parallel 3 --no-twin-critics ^
-        --root ./models_v5_notwin --log-root ./logs_v5_notwin
+    # 可选：单独实验 twin critic，写到另一组目录
+    python run_multiseed.py --n-seeds 5 --episodes 500 --parallel 3 --twin-critics ^
+        --root ./models_fixed_twin --log-root ./logs_fixed_twin
 
 健壮性（2026-10-02 修复）
 ------------------------
@@ -113,12 +113,12 @@ def main(argv=None):
     p.add_argument('--n-seeds', type=int, default=5, help='训练几个种子（用 0..n-1）')
     p.add_argument('--seeds', default=None, help='显式指定种子，如 "0,1,2"（覆盖 --n-seeds）')
     p.add_argument('--episodes', type=int, default=500, help='每个种子的训练轮数')
-    p.add_argument('--root', default='./models_v5', help='模型根目录（每个种子一个子目录）')
-    p.add_argument('--log-root', default='./logs_v5', help='日志根目录')
+    p.add_argument('--root', default='./models_fixed', help='模型根目录（每个种子一个子目录）')
+    p.add_argument('--log-root', default='./logs_fixed', help='日志根目录')
     p.add_argument('--parallel', type=int, default=1, help='同时跑几个进程')
     p.add_argument('--twin-critics', action=argparse.BooleanOptionalAction,
-                   default=True,
-                   help='是否启用 twin critic（默认启用；--no-twin-critics 关闭做 A/B）')
+                   default=False,
+                   help='是否启用 twin critic（默认关闭，与 AGENT_CONFIG 一致）')
     p.add_argument('--actor-update-mode', default=None,
                    choices=['counterfactual', 'legacy'])
     p.add_argument('--target-action-mode', default=None, choices=['greedy', 'soft'])
@@ -216,7 +216,7 @@ def main(argv=None):
     if not failed:
         print('\n下一步：筛查每个种子的检查点，挑出真正的 best：')
         print(f'  .venv\\Scripts\\python.exe tools\\screen_run.py --root "{args.root}" --seeds 24 '
-              f'--reference models_matd3\\maddpg_best.pth --out analysis\\screen_v5.json '
+              f'--out analysis\\screen_fixed.json '
               f'--copy-best "{args.root}\\BEST.pth"')
     return 0 if not failed else 1
 

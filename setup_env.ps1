@@ -3,10 +3,12 @@
     Create and configure the training environment for the highspeed project.
 
 .DESCRIPTION
+    CPU is the safe default. Use -Cuda128 only on a machine with a compatible
+    NVIDIA driver. An existing .venv is reused without deleting training files.
     Steps:
       1. Create the project virtual environment .venv
       2. Upgrade pip / setuptools / wheel
-      3. Install PyTorch (CUDA 12.8 build, required for RTX 50-series / Blackwell sm_120)
+      3. Install PyTorch (CPU by default, CUDA 12.8 with -Cuda128)
       4. Install the remaining dependencies
       5. Verify torch sees the GPU and the project modules import correctly
 
@@ -17,10 +19,13 @@
     Python interpreter used to create the venv. Default: D:\python\python.exe
 
 .PARAMETER CpuOnly
-    Install the CPU-only torch build (about 200MB, much slower). Default is CUDA 12.8.
+    Kept for compatibility; CPU installation is now the default.
+
+.PARAMETER Cuda128
+    Opt in to the CUDA 12.8 PyTorch build.
 
 .PARAMETER TorchVersion
-    Version of torch to install. Default 2.9.1 (same cu128 index, supports Blackwell sm_120).
+    Version of torch to install. Default 2.7.1.
     Pass an empty string to let pip pick the newest available.
 
 .EXAMPLE
@@ -37,7 +42,8 @@
 param(
     [string]$PythonExe = 'D:\python\python.exe',
     [switch]$CpuOnly,
-    [string]$TorchVersion = '2.9.1'
+    [switch]$Cuda128,
+    [string]$TorchVersion = '2.7.1'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -61,6 +67,10 @@ if (-not (Test-Path -LiteralPath $PythonExe)) {
     throw "Python interpreter not found: $PythonExe  (use -PythonExe to override)"
 }
 $pyVersion = & $PythonExe -c 'import sys; print(sys.version.split()[0])'
+if ([version]$pyVersion -lt [version]'3.11') {
+    throw "Python 3.11 or newer is required; found $pyVersion at $PythonExe"
+}
+if ($CpuOnly -and $Cuda128) { throw 'Choose either -CpuOnly or -Cuda128.' }
 Write-Ok "Python: $PythonExe  (version $pyVersion)"
 
 $hasGpu = $false
@@ -76,14 +86,22 @@ if (-not $hasGpu) {
 Write-Step 'Step 1/5  Create virtual environment .venv'
 
 if (Test-Path -LiteralPath $VenvDir) {
-    Write-Host "  Removing existing $VenvDir ..." -ForegroundColor Yellow
-    Remove-Item -LiteralPath $VenvDir -Recurse -Force
+    if (-not (Test-Path -LiteralPath $VenvPython)) {
+        throw "Existing .venv is incomplete: $VenvPython not found"
+    }
+    $venvVersion = & $VenvPython -c 'import sys; print(sys.version.split()[0])'
+    if (([version]$venvVersion).Major -ne ([version]$pyVersion).Major -or
+        ([version]$venvVersion).Minor -ne ([version]$pyVersion).Minor) {
+        throw "Existing .venv uses Python $venvVersion; requested interpreter is $pyVersion"
+    }
+    Write-Ok "Reusing existing $VenvDir"
+} else {
+    & $PythonExe -m venv $VenvDir
+    if (-not (Test-Path -LiteralPath $VenvPython)) {
+        throw "venv creation failed: $VenvPython not found"
+    }
+    Write-Ok "Created $VenvDir"
 }
-& $PythonExe -m venv $VenvDir
-if (-not (Test-Path -LiteralPath $VenvPython)) {
-    throw "venv creation failed: $VenvPython not found"
-}
-Write-Ok "Created $VenvDir"
 
 # ---------------------------------------------------------------- pip
 Write-Step 'Step 2/5  Upgrade pip / setuptools / wheel'
@@ -95,13 +113,13 @@ Write-Ok (& $VenvPython -m pip --version)
 $torchSpec = 'torch'
 if ($TorchVersion -ne '') { $torchSpec = "torch==$TorchVersion" }
 
-if ($CpuOnly) {
-    Write-Step 'Step 3/5  Install PyTorch (CPU build)'
-    & $VenvPython -m pip install $torchSpec --quiet
-} else {
+if ($Cuda128) {
     Write-Step "Step 3/5  Install PyTorch ($torchSpec, CUDA 12.8, about 2.5-3GB, please wait)"
     Write-Host '  index: https://download.pytorch.org/whl/cu128' -ForegroundColor DarkGray
     & $VenvPython -m pip install $torchSpec --index-url https://download.pytorch.org/whl/cu128
+} else {
+    Write-Step 'Step 3/5  Install PyTorch (CPU build)'
+    & $VenvPython -m pip install $torchSpec --quiet
 }
 if ($LASTEXITCODE -ne 0) { throw 'PyTorch installation failed' }
 Write-Ok 'PyTorch installed'
@@ -183,12 +201,12 @@ Write-Host @"
     python run_training.py --seed 42
 
     # watch the log from a second terminal
-    Get-Content .\logs_matd3\training_output.log -Wait
+    Get-Content .\logs_fixed_single\training_output.log -Wait
 
   AFTER TRAINING:
 
-    python evaluate.py 50
-    python plot_strategy_comparison.py --input evaluation_results.json
+    python evaluate.py 160 .\models_fixed_single\maddpg_best_avg.pth --output evaluation_results_fixed.json
+    python plot_strategy_comparison.py --input evaluation_results_fixed.json
     python visualize_training.py
 
 "@ -ForegroundColor Gray

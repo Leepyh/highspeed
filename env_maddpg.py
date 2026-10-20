@@ -128,6 +128,9 @@ class MultiAgentEmergencyLaneEnv(gym.Env):
             v_init_max=self.ca_config['v_initial_range'][1],
             yield_distance=self.ca_config.get('emergency_yield_distance', self.ca_config['D']),
         )
+        # 准入闸门通过 CA.segment_of() 选择智能体；重建 CA 后必须恢复分段信息。
+        self.ca.segment_length = self.segment_length
+        self.ca.n_segments = self.n_segments
     
     def _get_segment_info(self, segment_id):
         """
@@ -444,9 +447,9 @@ class MultiAgentEmergencyLaneEnv(gym.Env):
         执行一步环境交互
         actions: [n_agents] 每个智能体的动作
         """
-        # 应用动作
+        # 应用动作。历史动作要在奖励计算后写入，否则切换代价会拿当前动作
+        # 与自身比较；写入后再生成观测，供下一步看到本次动作。
         self._apply_actions(actions)
-        self.action_history.append(actions.copy())
         
         # 运行CA仿真多个时间步
         decision_interval = self.env_config['decision_interval']
@@ -456,11 +459,11 @@ class MultiAgentEmergencyLaneEnv(gym.Env):
         
         self.decision_step += 1
         
-        # 获取新观察
-        next_observations = [self._get_observation(i) for i in range(self.n_agents)]
-        
         # 计算奖励
         rewards = self._calculate_rewards(actions)
+
+        self.action_history.append(actions.copy())
+        next_observations = [self._get_observation(i) for i in range(self.n_agents)]
 
         # 更新"车速改善"基线（供下一决策步使用）
         self.prev_global_speed = self._global_speed()

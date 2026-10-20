@@ -41,6 +41,7 @@ install_torch_stub()
 install_gym_stub()
 
 SUITES = [
+    ("分段闸门、切换代价与道路占用一致性", "check_core_invariants.py", False),
     ("动作是否影响交通流 (D1/D2/D3)", "diagnose_action_effect.py", False),
     ("奖励是否与动作后果耦合 (D7)", "check_reward_action_coupling.py", False),
     ("应急车是否被堵死 (D4)", "check_emergency_yield.py", False),

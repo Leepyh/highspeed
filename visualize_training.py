@@ -23,7 +23,7 @@ def parse_training_log(log_path=None):
 
     日志路径优先级（2026-10-01 更新，加入多实验目录发现）：
       1) 显式传入的 log_path
-      2) config_maddpg.TRAIN_CONFIG['log_file']（当前默认 ./logs_v2/...）
+      2) config_maddpg.TRAIN_CONFIG['log_file']（当前默认 ./logs_fixed_single/...）
       3) 自动发现 ./logs*/training_output.log（如 logs_v3_a、logs_v3_b），
          有多个时取**最近修改**的那个
       4) 兼容旧的 ./training_output.log
@@ -154,7 +154,7 @@ def plot_training_curves(data, save_path='./visualization/training_curves.png'):
     plt.close()
 
 
-def plot_strategy_comparison(json_path='./evaluation_results.json', 
+def plot_strategy_comparison(json_path='./evaluation_results_fixed.json', 
                               save_path='./visualization/strategy_comparison.png'):
     """绘制策略对比图"""
     if not os.path.exists(json_path):
@@ -233,7 +233,7 @@ def plot_strategy_comparison(json_path='./evaluation_results.json',
     plt.close()
 
 
-def load_model_for_analysis(model_path='./models_matd3/maddpg_best.pth'):
+def load_model_for_analysis(model_path='./models_fixed_single/maddpg_best_avg.pth'):
     """加载训练好的模型用于分析"""
     if not os.path.exists(model_path):
         print(f"模型文件不存在: {model_path}")
@@ -555,7 +555,7 @@ def main():
     
     # 5. 策略行为可视化
     print("\n[5/5] Visualizing policy behavior...")
-    model_path = './models_matd3/maddpg_best.pth'
+    model_path = './models_fixed_single/maddpg_best_avg.pth'
     if os.path.exists(model_path):
         try:
             agent, env = load_model_for_analysis(model_path)

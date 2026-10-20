@@ -549,8 +549,8 @@ def train(n_episodes=None, seed=None, resume=True, resume_path=None,
         seed:        随机种子（仅全新训练时生效；续训时沿用检查点状态）
         resume:      是否自动从 <model_dir>/maddpg_resume.pth 恢复
         resume_path: 指定续训检查点路径
-        model_dir:   模型输出目录（默认 TRAIN_CONFIG['model_dir'] = ./models_v2）
-        log_dir:     日志输出目录（默认 TRAIN_CONFIG['log_dir'] = ./logs_v2）
+        model_dir:   模型输出目录（默认 TRAIN_CONFIG['model_dir']）
+        log_dir:     日志输出目录（默认 TRAIN_CONFIG['log_dir']）
         tag:         文件名前缀，便于同一目录内放多组实验
     """
     n_episodes = int(n_episodes) if n_episodes else TRAIN_CONFIG['n_episodes']
@@ -558,7 +558,7 @@ def train(n_episodes=None, seed=None, resume=True, resume_path=None,
     # ---------------- 输出目录（本次新增，防止覆盖旧模型）----------------
     # 【本次修复的坑】原实现把 best 直接写成 <model_dir>/maddpg_best.pth：
     # 从零训练只要有一轮超过 3851.00 就会覆盖现有最优模型。现在：
-    #   1) 默认目录改为 ./models_v2 与 ./logs_v2；
+    #   1) 默认目录与旧模型隔离（见 TRAIN_CONFIG）；
     #   2) 新版本**不再写 maddpg_best.pth**，改写
     #      maddpg_best_avg.pth（滑动平均口径，推荐）与 maddpg_best_peak.pth（旧口径）。
     model_dir = model_dir or TRAIN_CONFIG['model_dir']
@@ -825,9 +825,9 @@ def _parse_args(argv=None):
     parser.add_argument('--resume-from', default=None,
                         help='指定要恢复的检查点路径')
     parser.add_argument('--model-dir', default=None,
-                        help='模型输出目录（默认 ./models_v2；写旧目录请显式指定）')
+                        help='模型输出目录（默认见 TRAIN_CONFIG；写旧目录请显式指定）')
     parser.add_argument('--log-dir', default=None,
-                        help='日志输出目录（默认 ./logs_v2）')
+                        help='日志输出目录（默认见 TRAIN_CONFIG）')
     parser.add_argument('--tag', default=None,
                         help='文件名前缀，便于同一目录内放多组实验')
     parser.add_argument('--entropy-coef', type=float, default=None,

@@ -26,13 +26,13 @@ MADDPG 公平评估脚本（2026-10-01 修复版）
         现在改为**整回合逐决策步平均**。
 
 用法：
-    python evaluate.py                                  # 50 回合、配对、确定性
-    python evaluate.py 50 models_matd3/maddpg_best.pth
+    python evaluate.py                                  # 160 回合、配对、确定性
+    python evaluate.py 160 models_fixed_single/maddpg_best_avg.pth
     python evaluate.py 50 models_matd3/maddpg_best.pth --policy-mode sample
     python evaluate.py 50 ... --no-paired               # 复现旧的"各评各的"口径
 
 输出：
-    evaluation_results.json —— 与 plot_strategy_comparison.py 兼容
+    evaluation_results_fixed.json —— 与 plot_strategy_comparison.py 兼容
                                 （顶层为 {"meta":..., "results":{...}}，
                                  plot_strategy_comparison.py 会自动拆包）
 """
@@ -60,7 +60,7 @@ def create_env():
     return MultiAgentEmergencyLaneEnv()
 
 
-def create_maddpg_agent(env, model_path='./models_matd3/maddpg_best.pth'):
+def create_maddpg_agent(env, model_path='./models_fixed_single/maddpg_best_avg.pth'):
     """创建并加载MADDPG智能体（需要 torch，故延迟导入）"""
     try:
         from maddpg_v2 import MADDPGAgent
@@ -197,7 +197,8 @@ def run_strategy(env, policy, n_episodes=50, seeds=None, verbose=False):
             episode_reward += float(np.mean(rewards))
             openr.append(float(np.mean(actions == 1)))
             soc.append(float(np.mean(ca.vel[:n])) if n else 0.0)
-            lane2.append(float(np.sum(ca.lane[:ca.total_vehicles] == 2)) / max(n, 1))
+            # 社会车的应急道占比；应急车本来就在 lane 2，不能计入分子。
+            lane2.append(float(np.sum(ca.lane[:n] == 2)) / max(n, 1))
             if ca.n_emergency > 0:
                 sp = ca.vel[ca.emergency_ids]
                 em.append(float(np.mean(sp)))
@@ -255,8 +256,8 @@ def run_strategy(env, policy, n_episodes=50, seeds=None, verbose=False):
     }
 
 
-def run_evaluation(n_episodes=160, model_path='./models_matd3/maddpg_best.pth',
-                   output='evaluation_results.json', seed=0,
+def run_evaluation(n_episodes=160, model_path='./models_fixed_single/maddpg_best_avg.pth',
+                   output='evaluation_results_fixed.json', seed=0,
                    seed_start=1000, paired=True, policy_mode='argmax',
                    include_oracle=True, oracle_threshold=500):
     """运行完整评估。
@@ -343,7 +344,7 @@ def run_evaluation(n_episodes=160, model_path='./models_matd3/maddpg_best.pth',
     print("=" * 122)
     print("列说明: EmgSpd=应急车均速  SocSpd=社会车均速  Stall%=应急车停驻步数占比")
     print("        SuccRate=应急车均速达到可接受下界的回合占比  OpenRate=动作开放率")
-    print("        Lane2%=应急车道承载率  EmgEps=含应急车的回合数")
+    print("        Lane2%=社会车应急道占比  EmgEps=含应急车的回合数")
     print("        （除 EmgEps 外，速度类指标均为整回合逐决策步平均，不是回合末快照）")
 
     if results:
@@ -394,9 +395,9 @@ if __name__ == '__main__':
                         help='每个策略评估的回合数（默认 160；'
                              '实测 64 个场景测不出 +80 量级的差异，故提高默认值）')
     parser.add_argument('model_path', nargs='?',
-                        default='./models_matd3/maddpg_best.pth',
+                        default='./models_fixed_single/maddpg_best_avg.pth',
                         help='MADDPG 模型路径')
-    parser.add_argument('--output', default='evaluation_results.json',
+    parser.add_argument('--output', default='evaluation_results_fixed.json',
                         help='结果输出文件')
     parser.add_argument('--seed', type=int, default=0,
                         help='随机策略的种子')
