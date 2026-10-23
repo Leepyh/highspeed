@@ -36,3 +36,6 @@ Thumbs.db
 desktop.ini
 .idea/
 *.swp
+paper_results/
+paper_plan/
+paper_test_results/

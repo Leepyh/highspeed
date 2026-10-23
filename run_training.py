@@ -27,13 +27,14 @@ MADDPG 完整训练启动脚本（2026-10-01 修复版）
 """
 
 import argparse
+import json
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from maddpg_v2 import train, _apply_cli_overrides          # noqa: E402
-from config_maddpg import TRAIN_CONFIG, AGENT_CONFIG       # noqa: E402
+from config_maddpg import TRAIN_CONFIG, AGENT_CONFIG, CA_CONFIG, ENV_CONFIG  # noqa: E402
 
 
 def main() -> int:
@@ -52,6 +53,10 @@ def main() -> int:
                         help='日志输出目录（默认 ./logs_fixed_single）')
     parser.add_argument('--tag', default=None,
                         help='文件名前缀，便于同一目录内放多组实验')
+    parser.add_argument('--experiment-config', default=None,
+                        help='JSON file with ca/env overrides for controlled experiments')
+    parser.add_argument('--save-freq', type=int, default=None,
+                        help='Periodic checkpoint interval in episodes')
     parser.add_argument('--entropy-coef', type=float, default=None,
                         help='熵系数退火起点（默认 1.0）')
     parser.add_argument('--entropy-coef-end', type=float, default=None,
@@ -69,6 +74,32 @@ def main() -> int:
                         help='twin critic（TD3 clipped double-Q，抑制 Q 过估计）；'
                              '默认读 config_maddpg.AGENT_CONFIG["twin_critics"]')
     args = parser.parse_args()
+    if args.save_freq is not None:
+        if args.save_freq <= 0:
+            parser.error('--save-freq must be positive')
+        TRAIN_CONFIG['save_freq'] = args.save_freq
+
+    if args.experiment_config:
+        with open(args.experiment_config, encoding='utf-8') as handle:
+            overrides = json.load(handle)
+        if set(overrides) - {'ca', 'env'}:
+            parser.error('experiment config may contain only ca and env')
+        for section, target in (('ca', CA_CONFIG), ('env', ENV_CONFIG)):
+            entries = overrides.get(section, {})
+            unknown = set(entries) - set(target)
+            if section == 'ca':
+                unknown.discard('n_cars_choices')
+            if unknown:
+                parser.error(f'Unknown {section} keys: {unknown}')
+            for key, value in entries.items():
+                if key == 'reward_weights':
+                    target[key] = {**target[key], **value}
+                else:
+                    target[key] = value
+        if ENV_CONFIG['n_agents'] != ENV_CONFIG['n_segments']:
+            parser.error('n_agents must equal n_segments')
+        if CA_CONFIG['L'] % ENV_CONFIG['n_segments']:
+            parser.error('Road length must be divisible by n_segments')
 
     _apply_cli_overrides(args)
 

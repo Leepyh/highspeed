@@ -1,5 +1,60 @@
 # 高速公路应急车道元胞自动机仿真模型
 
+## 1014 文档实验代码入口
+
+`paper_experiments.py` 提供不训练模型的正式评价入口。默认对 350、520、850 辆社会车、
+每档 10 个配对种子评价恒关闭、恒开放和密度—应急联合阈值规则。评价使用 150 步预热、
+400 步观察窗口、5 步决策周期、1 辆应急车和 500 元胞目标行驶距离。可选 `--model`
+传入**与当前代码兼容且已训练**的 MADDPG 检查点。缺少模型时不会生成 MADDPG 结果。
+
+```powershell
+.\.venv\Scripts\python.exe paper_experiments.py --out paper_results
+.\.venv\Scripts\python.exe plot_paper_results.py paper_results
+```
+
+先用独立验证种子确定 `threshold_policy()` 的密度迟滞阈值和应急接近距离，再运行正式
+测试种子。`episodes.csv` 保存逐场景三项核心指标、完成状态和标准化换道次数；
+`paired_differences.csv`、`paired_summary.csv` 保存相对恒关闭的配对差值及 95% t 区间；
+`traces.json` 保存逐步速度、速度方差、开闭状态、应急车轨迹及逐车换道事件；
+`plot_paper_results.py` 从这些**实测记录**绘制指标图、效率权衡图和过程图。
+应急车未在窗口内完成目标距离时，行程时间留空并记录完成数，不以窗口长度代替。
+如果一组中存在未完成记录，汇总表和权衡图不报告该组行程时间均值；应延长统一
+观察窗口或采用明确的截尾分析后再比较。`--model` 只接受保存了训练协议且其预热
+步数、决策周期、应急车数量和出现概率与评价一致的检查点；旧检查点缺少协议元数据，
+不能直接进入正式对照。
+论文实验配置在 150 步预热结束后注入应急车，注入位置由场景种子预先抽取，
+注入时刻固定为评价窗口第 0 步，初速为最大车速；相同场景种子下各策略共用
+注入条件。`initial_state` 记录位置、时刻和初速，500 元胞行程从注入后计时。
+
+关闭分段只禁止社会车**新驶入**应急车道；已在该段的社会车继续行驶，直到按常规
+或应急避让规则安全换出。换道事件的 `reason` 区分常规、应急清空、避让标记，
+以及关闭后的常规驶出；事件发生位置对应换道前车辆位置。
+
+I-DQN、QMIX、MAPPO 已在 `learning_baselines.py` 实现，`train_baselines.py` 提供统一
+训练与独立验证入口。`experiment_matrix.py` 生成四算法各 10 个训练种子、520 辆训练
+泛化、MADDPG 奖励消融、应急权重、分段数及决策周期的完整计划：
+
+```powershell
+.\.venv\Scripts\python.exe experiment_matrix.py --write-plan
+.\.venv\Scripts\python.exe tune_threshold.py
+.\.venv\Scripts\python.exe evaluate_matrix.py --manifest paper_plan\manifest.json
+```
+
+以上命令只写计划或预览命令，**不会训练**。只有显式传给矩阵入口 `--execute`
+才会启动训练；训练完成后 `evaluate_matrix.py --execute` 才会在独立测试种子上评价。
+联合阈值规则需先用 `tune_threshold.py --execute` 在独立验证种子上选定参数，再把
+`paper_plan/threshold_validation.json` 传给评价入口的 `--threshold-config`；该步骤
+只评价规则，不训练模型。正式测试执行入口缺少该文件时会拒绝运行。
+`summarize_matrix.py paper_test_results` 按训练种子先汇总场景结果，避免把 10×10 次
+测试误作 100 个独立训练结果；`plot_matrix_sensitivity.py paper_test_results`
+可在结果齐备后绘制图7。默认计划有 185 个独立训练作业，主对照和跨密度泛化各为
+四算法×10种子；敏感性先按5种子筛选，关键设置可用 `--seeds-per-group 10` 扩展。
+三种新增算法均使用局部观测和二元动作，QMIX 与
+MAPPO 仅在训练时使用拼接观测；论文配置设置 `shared_team_reward=True`，
+将各段奖励的均值作为四种算法共同的团队目标。旧版独立 MADDPG 训练默认仍用局部奖励。
+MADDPG 的周期检查点通过独立验证种子选择，旧的 JSON 和 PNG 属于修复前实验，
+不应填入本次图表。
+
 > **2026-10-20 修复后须重新训练和评估。** 本次修复了分段闸门全部落到第 0 段、
 > 车辆在仅空一格时越过前车、动作切换惩罚未生效的问题。仓库内现有的
 > `evaluation_results.json`、`analysis/*.json`、旧图表及下文历史分数均由修复前

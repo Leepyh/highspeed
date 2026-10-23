@@ -30,7 +30,7 @@ class EmergencyVehicleCA:
     
     def __init__(self, L, n_lanes, n_cars, v_max, D, P1, P2, dev,
                  emergency_prob=0.3, max_emergency=3, v_init_min=1, v_init_max=None,
-                 yield_distance=None):
+                 yield_distance=None, defer_emergency=False):
         """
         参数:
             L: 车道长度（元胞数）
@@ -57,6 +57,7 @@ class EmergencyVehicleCA:
         self.dev = dev
         self.emergency_prob = emergency_prob
         self.max_emergency = max_emergency
+        self.defer_emergency = defer_emergency
         # 让行触发距离：可大于警笛影响范围 D，使社会车辆更早腾空应急车道
         self.yield_distance = D if yield_distance is None else yield_distance
         # 初始速度收敛到 [1, v_max]：元胞自动机中 v=0 会造成初始死锁，
@@ -86,6 +87,7 @@ class EmergencyVehicleCA:
         # 统计信息
         self.n_emergency = 0
         self.emergency_ids = []
+        self.pending_emergency_positions = []
         self.total_vehicles = 0
         
         # 历史记录
@@ -95,6 +97,10 @@ class EmergencyVehicleCA:
         self.history_speed_social = []
         self.history_speed_emergency = []
         self.history_lane_density = {i: [] for i in range(self.n_lanes)}
+        # Detailed events are opt-in so training does not retain large logs.
+        self.record_lane_events = False
+        self.lane_events = []
+        self.sim_step = 0
         
         # 初始化车辆
         self._init_vehicles()
@@ -121,7 +127,13 @@ class EmergencyVehicleCA:
             self.road[self.lane[i], pos] = i
         
         # 随机生成应急车数量
-        self.n_emergency = np.random.binomial(self.max_emergency, self.emergency_prob)
+        sampled_emergency = int(np.random.binomial(self.max_emergency, self.emergency_prob))
+        if self.defer_emergency:
+            self.pending_emergency_positions = list(
+                all_positions[self.n_cars:self.n_cars + sampled_emergency])
+            self.total_vehicles = self.n_cars
+            return
+        self.n_emergency = sampled_emergency
         
         if self.n_emergency > 0:
             emergency_positions = all_positions[self.n_cars:self.n_cars + self.n_emergency]
@@ -135,6 +147,22 @@ class EmergencyVehicleCA:
                 self.emergency_ids.append(vid)
         
         self.total_vehicles = self.n_cars + self.n_emergency
+
+    def inject_pending_emergency(self):
+        """在预热结束后注入预先抽样的应急车，按抽样顺序保持配对场景一致。"""
+        for pos in self.pending_emergency_positions:
+            vid = self.n_cars + self.n_emergency
+            while self.road[self.n_lanes - 1, pos] != -1:
+                pos = (pos + 1) % self.L
+            self.pos[vid] = pos
+            self.vel[vid] = self.v_max
+            self.lane[vid] = self.n_lanes - 1
+            self.has_emergency[vid] = True
+            self.road[self.lane[vid], pos] = vid
+            self.emergency_ids.append(vid)
+            self.n_emergency += 1
+            self.total_vehicles += 1
+        self.pending_emergency_positions = []
     
     def _distance_to_front(self, vid):
         """计算到前车的距离（考虑环形道路）"""
@@ -253,7 +281,7 @@ class EmergencyVehicleCA:
         
         return True
     
-    def _change_lane(self, vid, direction):
+    def _change_lane(self, vid, direction, reason='routine'):
         """执行变道"""
         old_lane = self.lane[vid]
         pos = self.pos[vid]
@@ -269,6 +297,18 @@ class EmergencyVehicleCA:
         self.road[old_lane, pos] = -1
         self.road[new_lane, pos] = vid
         self.lane[vid] = new_lane
+        if self.record_lane_events:
+            if (reason == 'routine' and old_lane == self.n_lanes - 1
+                    and hasattr(self, 'segment_actions')
+                    and self.segment_actions[self.segment_of(pos)] == 0):
+                reason = 'routine_exit_after_closure'
+            self.lane_events.append({
+                'step': self.sim_step, 'vehicle_id': int(vid),
+                'vehicle_type': 'emergency' if self.has_emergency[vid] else 'social',
+                'position': int(pos), 'segment': int(self.segment_of(pos)),
+                'from_lane': int(old_lane), 'to_lane': int(new_lane),
+                'reason': reason,
+            })
         
         return True
     
@@ -278,6 +318,7 @@ class EmergencyVehicleCA:
     
     def step(self):
         """执行一个时间步"""
+        self.sim_step += 1
         # 重置避让标记
         self.g[:] = 0
         
@@ -356,22 +397,22 @@ class EmergencyVehicleCA:
         if (self.lane[vid] == self.n_lanes - 1
                 and self._emergency_lane_blocked(self.pos[vid], self.lane[vid])):
             if self._can_change_lane(vid, 'left') and random.random() < self.P2:
-                self._change_lane(vid, 'left')
+                self._change_lane(vid, 'left', 'emergency_clearance')
                 changed_lane = True
                 lane = self.lane[vid]
         
         # 2b. 如果有避让标记，优先尝试变道
-        if self.g[vid] == 1:
+        if self.g[vid] == 1 and not changed_lane:
             # 尝试向左变道
             if self._can_change_lane(vid, 'left'):
                 if random.random() < self.P2:
-                    self._change_lane(vid, 'left')
+                    self._change_lane(vid, 'left', 'yield_marker')
                     changed_lane = True
                     lane = self.lane[vid]
             # 如果不能向左，尝试向右
             elif self._can_change_lane(vid, 'right'):
                 if random.random() < self.P2:
-                    self._change_lane(vid, 'right')
+                    self._change_lane(vid, 'right', 'yield_marker')
                     changed_lane = True
                     lane = self.lane[vid]
         

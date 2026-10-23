@@ -427,6 +427,7 @@ class MADDPGAgent:
                 'n_actions': self.n_actions,
                 'actor_hidden_dims': self.config['actor_hidden_dims'],
                 'critic_hidden_dims': self.config['critic_hidden_dims'],
+                'experiment_protocol': self.config.get('experiment_protocol'),
             }
         }
         if extra:
@@ -595,6 +596,18 @@ def train(n_episodes=None, seed=None, resume=True, resume_path=None,
     logger.info(f"Target episodes: {n_episodes}, Device: {TRAIN_CONFIG['device']}")
     
     config = {
+        'experiment_protocol': {
+            'warm_up_steps': CA_CONFIG['warm_up_steps'],
+            'max_steps': CA_CONFIG['max_steps'],
+            'decision_interval': ENV_CONFIG['decision_interval'],
+            'max_emergency': CA_CONFIG['max_emergency'],
+            'inject_emergency_after_warmup': CA_CONFIG.get('inject_emergency_after_warmup', False),
+            'shared_team_reward': ENV_CONFIG.get('shared_team_reward', False),
+            'n_segments': ENV_CONFIG['n_segments'],
+            'n_cars_range': list(CA_CONFIG['n_cars_range']),
+            'n_cars_choices': CA_CONFIG.get('n_cars_choices'),
+            'P_emergency_range': list(CA_CONFIG['P_emergency_range']),
+        },
         'actor_hidden_dims': AGENT_CONFIG['actor_hidden_dims'],
         'critic_hidden_dims': AGENT_CONFIG['critic_hidden_dims'],
         'actor_lr': AGENT_CONFIG['actor_lr'],

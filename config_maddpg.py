@@ -29,6 +29,7 @@ CA_CONFIG = {
     'v_emergency': 5,                # 应急车辆速度
     'P_emergency_range': (0.3, 0.5), # 应急车出现概率范围（30%-50%随机）
     'max_emergency': 3,              # 最大应急车辆数
+    'inject_emergency_after_warmup': False,  # 论文实验在预热结束时注入；旧实验保持原协议
     # 应急车让行触发距离：应急车后方该距离内的社会车辆需退出应急车道。
     # 经 tools/check_emergency_yield.py 实测，D=60 时应急车平均速度最高
     # (3.61)、最长连续停滞从 9 步降到 3 步；再增大改善有限且会挤占社会车辆。
@@ -50,6 +51,9 @@ CA_CONFIG = {
 
 # ==================== 多智能体环境参数 ====================
 ENV_CONFIG = {
+    # Paper comparison uses one shared team objective for all four algorithms.
+    # Keep the historical default for existing standalone MADDPG runs.
+    'shared_team_reward': False,
     # 分段控制参数
     'n_segments': 5,       # 将道路分成5段（每段200元胞）
     'n_agents': 5,         # 5个智能体，每个控制一段

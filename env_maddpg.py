@@ -81,6 +81,8 @@ class MultiAgentEmergencyLaneEnv(gym.Env):
         # 当前步数
         self.current_step = 0
         self.decision_step = 0
+        self.trace_steps = False
+        self.step_trace = []
 
         # 上一决策步的全网归一化平均车速，用于计算"车速改善"奖励项
         self.prev_global_speed = None
@@ -91,10 +93,10 @@ class MultiAgentEmergencyLaneEnv(gym.Env):
     def _reset_ca(self):
         """重置CA模型 - 每轮随机采样车辆数和应急车概率"""
         # 从范围中随机采样车辆数
-        n_cars = np.random.randint(
-            self.ca_config['n_cars_range'][0],
-            self.ca_config['n_cars_range'][1] + 1
-        )
+        choices = self.ca_config.get('n_cars_choices')
+        n_cars = (int(np.random.choice(choices)) if choices is not None
+                  else int(np.random.randint(self.ca_config['n_cars_range'][0],
+                                             self.ca_config['n_cars_range'][1] + 1)))
         
         # 从范围中随机采样应急车出现概率
         P_emergency = np.random.uniform(
@@ -127,6 +129,7 @@ class MultiAgentEmergencyLaneEnv(gym.Env):
             v_init_min=self.ca_config['v_initial_range'][0],
             v_init_max=self.ca_config['v_initial_range'][1],
             yield_distance=self.ca_config.get('emergency_yield_distance', self.ca_config['D']),
+            defer_emergency=self.ca_config.get('inject_emergency_after_warmup', False),
         )
         # 准入闸门通过 CA.segment_of() 选择智能体；重建 CA 后必须恢复分段信息。
         self.ca.segment_length = self.segment_length
@@ -185,7 +188,8 @@ class MultiAgentEmergencyLaneEnv(gym.Env):
                         em_speed = self.ca.vel[em_id] / self.ca_config['v_max']
                     else:
                         # 计算到该段的距离
-                        dist_to_start = (em_pos - start_pos) % self.ca_config['L']
+                        # Forward distance on the ring: the vehicle approaches start_pos.
+                        dist_to_start = (start_pos - em_pos) % self.ca_config['L']
                         if dist_to_start < em_distance:
                             em_distance = dist_to_start
                             em_speed = self.ca.vel[em_id] / self.ca_config['v_max']
@@ -270,6 +274,7 @@ class MultiAgentEmergencyLaneEnv(gym.Env):
         """
         actions = np.asarray(actions)
 
+        self.ca.segment_actions = np.asarray(actions, dtype=int).copy()
         def can_enter_emergency_lane(vid, segment_open=True):
             # 应急车不受闸门限制
             if vid >= self.ca.n_cars:
@@ -426,6 +431,7 @@ class MultiAgentEmergencyLaneEnv(gym.Env):
         self.action_history = []
         self.current_step = 0
         self.decision_step = 0
+        self.step_trace = []
 
         # CA 对象已被重建，必须重新挂载闸门，否则预热阶段不受控制
         self._install_emergency_lane_gate(np.zeros(self.n_agents, dtype=int))
@@ -433,6 +439,10 @@ class MultiAgentEmergencyLaneEnv(gym.Env):
         # 预热阶段
         for _ in range(self.ca_config['warm_up_steps']):
             self.ca.step()
+        if self.ca_config.get('inject_emergency_after_warmup', False):
+            self.ca.inject_pending_emergency()
+        self.ca.lane_events = []
+        self.ca.sim_step = 0
 
         # 预热结束后的全网车速作为"车速改善"项的基线
         self.prev_global_speed = self._global_speed()
@@ -456,11 +466,23 @@ class MultiAgentEmergencyLaneEnv(gym.Env):
         for _ in range(decision_interval):
             self.ca.step()
             self.current_step += 1
+            if self.trace_steps:
+                ca = self.ca
+                self.step_trace.append({
+                    'step': self.current_step,
+                    'social_speed': float(np.mean(ca.vel[:ca.n_cars])),
+                    'social_speed_variance': float(np.var(ca.vel[:ca.n_cars])),
+                    'emergency_speed': int(ca.vel[ca.emergency_ids[0]]) if ca.emergency_ids else None,
+                    'emergency_position': int(ca.pos[ca.emergency_ids[0]]) if ca.emergency_ids else None,
+                    'actions': [int(a) for a in actions],
+                })
         
         self.decision_step += 1
         
         # 计算奖励
         rewards = self._calculate_rewards(actions)
+        if self.env_config.get('shared_team_reward', False):
+            rewards = np.full(self.n_agents, float(np.mean(rewards)), dtype=float)
 
         self.action_history.append(actions.copy())
         next_observations = [self._get_observation(i) for i in range(self.n_agents)]
