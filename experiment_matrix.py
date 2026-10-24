@@ -99,7 +99,8 @@ def make_plan(plan_dir, groups, episodes, seeds):
                                '--output', str(output), '--execute']
                     postcommand = None
                 jobs.append({'group': name, 'algorithm': method, 'seed': seed,
-                             'config': str(config_path), 'output': str(output),
+                             'config': str(config_path.relative_to(plan_dir)),
+                             'output': str(output.relative_to(plan_dir)),
                              'command': command, 'postcommand': postcommand})
     return jobs
 
@@ -135,7 +136,7 @@ def main():
                                             encoding='utf-8')
     if args.execute:
         for index, job in enumerate(jobs, 1):
-            Path(job['output']).mkdir(parents=True, exist_ok=True)
+            (plan_dir / job['output']).mkdir(parents=True, exist_ok=True)
             print(f"[{index}/{len(jobs)}] {job['group']} {job['algorithm']} seed={job['seed']}", flush=True)
             subprocess.run(job['command'], check=True, cwd=HERE)
             if job['postcommand']:

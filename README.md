@@ -1,5 +1,41 @@
 # 高速公路应急车道元胞自动机仿真模型
 
+## 从 GitHub 下载后的运行方法
+
+先在 PowerShell 中进入**包含 `paper_experiments.py` 的目录**。GitHub ZIP 解压后可能
+出现两层 `highspeed-main`；用 `Test-Path .\paper_experiments.py` 确认，应返回 `True`。
+仓库不包含 `.venv`、`paper_plan` 和 `.pth` 模型文件。在新机器上先创建运行环境：
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
+
+如果还没有训练模型，可以直接运行三种规则策略的评价和绘图：
+
+```powershell
+.\.venv\Scripts\python.exe paper_experiments.py --out paper_results
+.\.venv\Scripts\python.exe plot_paper_results.py paper_results
+```
+
+这会运行仿真，使用默认规则阈值；正式论文测试前需完成下文的独立阈值验证。
+四种学习算法的评价必须提供**训练完成并通过独立验证选出的** `best_validation.pth`。
+训练种子 0 的标准目录是 `seed_00`，种子 1 是 `seed_01`；截图中的 `seed_0` 与
+标准目录名不同。入口会在存在对应文件时兼容未补零的写法，并打印实际使用的路径。
+仅执行 `experiment_matrix.py --write-plan` 不会生成任何模型。
+
+模型已有时，先用下面的命令检查四个文件路径：
+
+```powershell
+.\.venv\Scripts\python.exe paper_experiments.py --check-only --model paper_plan\runs\main_mixed\maddpg\seed_00\best_validation.pth --idqn-model paper_plan\runs\main_mixed\idqn\seed_00\best_validation.pth --qmix-model paper_plan\runs\main_mixed\qmix\seed_00\best_validation.pth --mappo-model paper_plan\runs\main_mixed\mappo\seed_00\best_validation.pth
+```
+
+路径检查成功后移除 `--check-only` 即可评价该训练种子；正式测试时另加
+`--threshold-config paper_plan\threshold_validation.json`。路径检查不验证模型内容；
+实际评价会继续核对算法类型及训练协议。需要汇总全部训练种子时使用下方矩阵入口。
+复制命令请使用代码块中的单行命令，PowerShell 多行续行符必须是反引号，且其后不能有空格。
+矩阵入口打印的 PowerShell 命令已包含调用符 `&` 和参数引号，支持项目路径中含空格。
+
 ## 1014 文档实验代码入口
 
 `paper_experiments.py` 提供不训练模型的正式评价入口。默认对 350、520、850 辆社会车、
@@ -40,7 +76,26 @@ I-DQN、QMIX、MAPPO 已在 `learning_baselines.py` 实现，`train_baselines.py
 .\.venv\Scripts\python.exe evaluate_matrix.py --manifest paper_plan\manifest.json
 ```
 
-以上命令只写计划或预览命令，**不会训练**。只有显式传给矩阵入口 `--execute`
+需要启动主对照的四算法×10训练种子时，命令为：
+
+```powershell
+.\.venv\Scripts\python.exe experiment_matrix.py --groups main --execute
+```
+
+以上命令**会启动 40 项训练**；完整 185 项训练使用 `experiment_matrix.py --execute`。
+先前的“代码可以开始训练”表示训练入口已验证，不表示仓库已经提供训练结果。
+训练后依次执行规则验证、模型路径检查和正式矩阵评价：
+
+```powershell
+.\.venv\Scripts\python.exe tune_threshold.py --execute
+.\.venv\Scripts\python.exe evaluate_matrix.py --manifest paper_plan\manifest.json --check-only
+.\.venv\Scripts\python.exe evaluate_matrix.py --manifest paper_plan\manifest.json --threshold-config paper_plan\threshold_validation.json --execute
+```
+
+计划使用相对于 `manifest.json` 的配置及模型路径，便于把整个 `paper_plan` 目录
+复制到其他电脑。旧版含绝对路径的计划在目录结构完整时也支持重新定位。
+
+最前面的三条计划/预览命令**不会训练**。只有显式传给矩阵入口 `--execute`
 才会启动训练；训练完成后 `evaluate_matrix.py --execute` 才会在独立测试种子上评价。
 联合阈值规则需先用 `tune_threshold.py --execute` 在独立验证种子上选定参数，再把
 `paper_plan/threshold_validation.json` 传给评价入口的 `--threshold-config`；该步骤

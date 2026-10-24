@@ -17,6 +17,7 @@ import numpy as np
 
 from config_maddpg import CA_CONFIG, ENV_CONFIG
 from env_maddpg import MultiAgentEmergencyLaneEnv
+from experiment_paths import resolve_input_path, missing_checkpoints_message
 
 
 def threshold_policy(open_density=0.26, close_density=0.22, approach=80):
@@ -268,8 +269,25 @@ def main():
         parser.add_argument(f'--{method}-model', type=Path,
                             help=f'Validated {method.upper()} checkpoint')
     parser.add_argument('--out', type=Path, default=Path('paper_results'))
+    parser.add_argument('--check-only', action='store_true',
+                        help='Check input file paths only; do not run simulation or training')
     args = parser.parse_args()
+    missing = []
+    for key in ('model', 'idqn_model', 'qmix_model', 'mappo_model'):
+        value = getattr(args, key)
+        if value is not None:
+            path = resolve_input_path(value, checkpoint=True)
+            setattr(args, key, path)
+            if not path.is_file():
+                missing.append(('--' + key.replace('_', '-'), path))
+            elif path != value.resolve():
+                print(f'Resolved --{key.replace("_", "-")}: {path}')
+    if missing:
+        parser.error(missing_checkpoints_message(missing))
     if args.threshold_config:
+        args.threshold_config = resolve_input_path(args.threshold_config)
+        if not args.threshold_config.is_file():
+            parser.error(f'Threshold configuration not found: {args.threshold_config}')
         with args.threshold_config.open(encoding='utf-8') as handle:
             calibrated = json.load(handle)
         args.open_density = calibrated['open_density']
@@ -287,6 +305,12 @@ def main():
         parser.error('Segments must be positive and divide road length')
     if not 0 <= args.close_density < args.open_density <= 1 or args.approach_distance < 0:
         parser.error('Require 0 <= close density < open density <= 1 and nonnegative approach')
+    if args.check_only:
+        print('Input paths and arguments OK. Checkpoint contents have not been validated. '
+              'No simulation or training started.')
+        if not any(getattr(args, key) for key in ('model', 'idqn_model', 'qmix_model', 'mappo_model')):
+            print('No learning checkpoints requested: evaluation will contain three rule policies only.')
+        return
     args.out.mkdir(parents=True, exist_ok=True)
     records, detailed = [], []
     for density in args.densities:
